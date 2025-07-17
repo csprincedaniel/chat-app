@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link"
 
 export default function Home() {
   return (
@@ -7,8 +8,13 @@ export default function Home() {
 
       <div id='wrapper'>
           <div id="container">
-              <button><h2>Login</h2></button>
-              <button><h2>Signup</h2></button>
+              <Link href="/login">
+                  <button><h2>Login</h2></button>
+              </Link>
+
+              <Link href="/signup">
+                  <button><h2>Signup</h2></button>
+              </Link>
           </div>
       </div>
 

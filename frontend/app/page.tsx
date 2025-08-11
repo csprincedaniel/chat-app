@@ -1,24 +1,26 @@
-import Image from "next/image";
-import Link from "next/link"
+"use client"
 
-export default function Home() {
-  return (
-    <div>
-      <h1>Welcome To OurChat!</h1>
+import { useState } from "react"
+import AuthPage from "@/components/auth-page"
+import DiscordApp from "@/components/discord-app"
 
-      <div id='wrapper'>
-          <div id="container">
-              <Link href="/login">
-                  <button><h2>Login</h2></button>
-              </Link>
+export default function HomePage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [user, setUser] = useState<{ username: string; email: string } | null>(null)
 
-              <Link href="/signup">
-                  <button><h2>Signup</h2></button>
-              </Link>
-          </div>
-      </div>
+  const handleLogin = (userData: { username: string; email: string }) => {
+    setUser(userData)
+    setIsAuthenticated(true)
+  }
 
-      <h1>Created By: Daniel Prince and Jack Tsui.</h1>
-    </div>
-  );
+  const handleLogout = () => {
+    setUser(null)
+    setIsAuthenticated(false)
+  }
+
+  if (isAuthenticated && user) {
+    return <DiscordApp user={user} onLogout={handleLogout} />
+  }
+
+  return <AuthPage onLogin={handleLogin} />
 }

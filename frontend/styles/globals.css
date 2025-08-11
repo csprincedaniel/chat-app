@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -115,39 +115,9 @@
 
 @layer base {
   * {
-    box-sizing: border-box;
-    padding: 0;
-    margin: 0;
     @apply border-border outline-ring/50;
   }
-  html,
   body {
-    max-width: 100vw;
-    overflow-x: hidden;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  }
-  body {
-    background-color: #1a1d23;
-    color: #e4e6ea;
-  }
-  a {
-    color: inherit;
-    text-decoration: none;
-  }
-  button {
-    font-family: inherit;
-  }
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-  ::-webkit-scrollbar-track {
-    background: #2e3338;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #202225;
-    border-radius: 4px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #1a1d21;
+    @apply bg-background text-foreground;
   }
 }

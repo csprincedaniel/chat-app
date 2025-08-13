@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # How to connect to postgres
-DATABASE_URL = "postgresql+psycopg2://postgres:password@localhost/discord_clone"
+DATABASE_URL = "postgresql+psycopg2://postgres:guiltyGear123@localhost/discord_clone"
 
 # Manages connection
 engine = create_engine(DATABASE_URL)
@@ -10,6 +10,8 @@ engine = create_engine(DATABASE_URL)
 # autoflush=Flase avoids auto write to database
 # bind=engine sessions created by this maker uses engine
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
 
 def get_db():
 

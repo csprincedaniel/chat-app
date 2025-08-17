@@ -1,26 +1,36 @@
 # Chat Application Backend
 
 ## Overview
-This backend powers a **full-featured chat application**, built by **Daniel Prince** and **Jack Tsui**. It is designed to replicate the functionality of popular platforms like Discord, offering a complete messaging experience with robust backend support.
+This backend powers a **full-featured chat application**, built by **Daniel Prince** and **Jack Tsui**. It replicates the functionality of platforms like Discord, offering a complete messaging experience with robust backend support.  
 
-The project includes **two versions** of the backend:
+The project includes **two versions**:
 
 - **Java Spring Boot version:** Fully functional and demo-ready, with complete PostgreSQL integration and all chat features working.  
-- **Python version:** Present in the codebase but **does not currently work**.
+- **Python version:** Present in the codebase but **does not currently work yet**; we are actively working to make it fully operational.  
 
-Key features of the chat backend:
+### Key Features
+The backend supports **all features of a modern chat platform**, including real-time messaging, channels, roles, media support, and notifications. On top of that, it includes cutting-edge **ML-powered features**:
+
+| **Feature**              | **ML Type**                        |
+| ------------------------ | ---------------------------------- |
+| Toxicity Detection       | NLP (Supervised Learning)          |
+| Sentiment Analysis       | NLP (Supervised)                   |
+| Summarization Bot        | LLM / NLP                          |
+| AI Avatar Generation     | Diffusion models                   |
+| Voice-to-Text            | ASR (Automatic Speech Recognition) |
+| Speech Emotion Detection | Audio ML                            |
+
+Other backend highlights:
 
 - **User Authentication:** Secure registration, login, and profile management.  
-- **Real-Time Messaging:** Instant messaging across multiple channels and direct messages.  
+- **Real-Time Messaging:** Instant messaging across channels and direct messages.  
 - **Channels & Groups:** Multiple chat channels, private groups, and DMs fully supported.  
 - **Roles & Permissions:** Fine-grained control for users and moderators.  
-- **Media Support:** Handles attachments, images, and files in messages.  
-- **Notifications:** Alerts users based on activity and messages.  
-- **PostgreSQL Database:** Fully integrated to store users, messages, channels, and other data.  
+- **PostgreSQL Database:** Fully integrated for storing users, messages, channels, and app data.  
 - **Scalable Architecture:** Modular design for future features and easy maintenance.  
-- **Clean Codebase:** Well-organized Java packages and structured components.
+- **Clean Codebase:** Well-organized Java packages and structured components.  
 
-This backend is built as a showcase of a professional-grade chat platform, demonstrating how to implement a robust, scalable, and secure messaging system. From managing users to handling complex messaging workflows, it covers every aspect of a modern chat service.
+This backend demonstrates a **professional-grade, scalable, and secure chat platform**, handling complex workflows with advanced AI and ML features.
 
 ## Quick Start (Working Demo)
 To see the backend in action:
@@ -35,6 +45,7 @@ To see the backend in action:
 - REST API endpoints for authentication, messaging, and channel management.
 - PostgreSQL integration with ready-to-use schemas.
 - Fully functional Discord-like chat backend.
+- Advanced ML-powered features (see table above).
 - Single-click demo inside an IDE.
 
 ## About the Developers
@@ -44,8 +55,9 @@ To see the backend in action:
 
 ## Notes
 - Java packages are tied to the `backend` folder. Renaming it will break Spring Boot scanning.
+- Python backend **does not work yet**, but we are actively working to make it fully operational.
 - PostgreSQL configuration is ready; ensure your local database matches `application.properties`.
 
 ## Project Status
 - **Java Spring Boot:** Fully working, demo-ready.
-- **Python backend:** Included but **currently does not work**.
+- **Python backend:** Present but currently non-functional; actively in development.

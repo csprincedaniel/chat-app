@@ -52,9 +52,8 @@ To see the backend in action:
 - Single-click demo in IDEs.
 
 ## About the Developers
-- **Daniel Prince** – Backend architecture, database design, API implementation, and frontend integration.  
-- **Jack Tsui** – System integration, Spring Boot/FastAPI development, testing, and frontend collaboration.  
-- Built to demonstrate a fully functional, scalable, and maintainable full-stack chat application.
+- **Daniel Prince** – [ENTER HERE]
+- **Jack Tsui** – [ENTER HERE]
 
 ## Notes
 - Java packages are tied to the `backend` folder. Renaming it will break Spring Boot scanning.  

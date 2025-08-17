@@ -321,7 +321,4 @@ async def websocket_endpoint(channel_id:str, websocket:WebSocket):
 async def check_health():
     return {"Status": "healthy", "timestamp": get_timestamp()}
 
-if "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port="8000")
 

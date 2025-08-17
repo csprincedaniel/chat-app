@@ -1,24 +1,41 @@
-import Image from "next/image";
-import Link from "next/link"
+"use client"
 
-export default function Home() {
-  return (
-    <div>
-      <h1>Welcome To OurChat!</h1>
+import { useState } from "react"
+import AuthPage from "@/components/auth-page"
+import DiscordApp from "@/components/discord-app"
 
-      <div id='wrapper'>
-          <div id="container">
-              <Link href="/login">
-                  <button><h2>Login</h2></button>
-              </Link>
+export default function HomePage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [user, setUser] = useState<{ username: string; password: string } | null>(null)
 
-              <Link href="/signup">
-                  <button><h2>Signup</h2></button>
-              </Link>
-          </div>
-      </div>
+  const handleLogin = (userData: { username: string; password: string }) => {
+    const url = `http://localhost:8080/info/username?username=${encodeURIComponent(userData.username)}`
 
-      <h1>Created By: Daniel Prince and Jack Tsui.</h1>
-    </div>
-  );
+    fetch(url)
+      .then(res => {
+        if (!res.ok) throw new Error('Network error')
+        return res.json()
+      })
+      .then(data => {
+        if (data.username === userData.username && data.password === userData.password) {
+          setUser({ username: data.username, password: data.password })
+          setIsAuthenticated(true)
+          alert("Login Successfull " + data.username)
+        } else {
+          alert(`Login failed. Expected: "${data.username}" / "${data.password}", you entered: "${userData.username}" / "${userData.password}"`)
+        }
+      })
+      .catch(err => {
+        console.error(err)
+        alert('Failed to fetch user')
+      })
+  }
+
+  const handleLogout = () => {
+    setUser(null)
+    setIsAuthenticated(false)
+  }
+
+  if (isAuthenticated && user) return <DiscordApp user={user} onLogout={handleLogout} />
+  return <AuthPage onLogin={handleLogin} />
 }

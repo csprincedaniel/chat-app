@@ -1,0 +1,7 @@
+.app {
+  display: flex;
+  height: 100vh;
+  background-color: #36393f;
+  color: #dcddde;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}

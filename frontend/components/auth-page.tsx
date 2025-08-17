@@ -1,12 +1,11 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import styles from "./auth-page.module.css"
 
 interface AuthPageProps {
-  onLogin: (userData: { username: string; email: string }) => void
+  onLogin: (userData: { username: string; password: string }) => void
 }
 
 export default function AuthPage({ onLogin }: AuthPageProps) {
@@ -29,28 +28,16 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
   const validateForm = () => {
     const newErrors: string[] = []
 
-    if (!formData.email) {
-      newErrors.push("Email is required")
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.push("Email is invalid")
-    }
+    if (!formData.email) newErrors.push("Email is required")
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.push("Email is invalid")
 
-    if (!formData.password) {
-      newErrors.push("Password is required")
-    } else if (formData.password.length < 6) {
-      newErrors.push("Password must be at least 6 characters")
-    }
+    if (!formData.password) newErrors.push("Password is required")
+    else if (formData.password.length < 6) newErrors.push("Password must be at least 6 characters")
 
     if (!isLogin) {
-      if (!formData.username) {
-        newErrors.push("Username is required")
-      } else if (formData.username.length < 3) {
-        newErrors.push("Username must be at least 3 characters")
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        newErrors.push("Passwords do not match")
-      }
+      if (!formData.username) newErrors.push("Username is required")
+      else if (formData.username.length < 3) newErrors.push("Username must be at least 3 characters")
+      if (formData.password !== formData.confirmPassword) newErrors.push("Passwords do not match")
     }
 
     return newErrors
@@ -59,7 +46,6 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const validationErrors = validateForm()
-
     if (validationErrors.length > 0) {
       setErrors(validationErrors)
       return
@@ -68,25 +54,19 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
     setIsLoading(true)
     setErrors([])
 
-    // Simulate API call
     setTimeout(() => {
       const userData = {
-        username: formData.username || formData.email.split("@")[0],
-        email: formData.email,
+        username: formData.email, // email as login identifier
+        password: formData.password
       }
       onLogin(userData)
       setIsLoading(false)
-    }, 1000)
+    }, 500)
   }
 
   const toggleMode = () => {
     setIsLogin(!isLogin)
-    setFormData({
-      username: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    })
+    setFormData({ username: "", email: "", password: "", confirmPassword: "" })
     setErrors([])
   }
 
@@ -111,9 +91,7 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
             {errors.length > 0 && (
               <div className={styles.errorContainer}>
                 {errors.map((error, index) => (
-                  <div key={index} className={styles.error}>
-                    {error}
-                  </div>
+                  <div key={index} className={styles.error}>{error}</div>
                 ))}
               </div>
             )}

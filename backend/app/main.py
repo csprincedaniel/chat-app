@@ -137,7 +137,7 @@ manager = ConnectionManager()
 
 @app.get("/")
 async def root():
-    return {"Message": "Chat App is runnign"}
+    return {"Message": "Chat App is running"}
 
 
 

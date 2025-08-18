@@ -59,9 +59,9 @@ X = []
 y = []
 
 for vector, label in vectors:
-    X.append(X)
-    y.append(y)
-X = np.array(x)
+    X.append(vector)
+    y.append(label)
+X = np.array(X)
 y = np.array(y)
 print("Input array shape:", X.shape)
 print("Label array shape:", y.shape)
@@ -97,6 +97,8 @@ history = model.fit(
     validation_data=(X_test, y_test),  # track test performance while training
     verbose=1
 )
+
+
 # EVALUATION (I Didn't write this. I need to analyze later)
 loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
 print("Test accuracy:", accuracy)

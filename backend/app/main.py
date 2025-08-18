@@ -19,7 +19,7 @@ app.add_middleware(
     allow_origins=["*"], # Place frontend url here
     allow_credentials=True,
     allow_methods=["*"],
-    allow_header=["*"]
+    allow_headers=["*"]
 
 
 )
@@ -147,7 +147,7 @@ async def register_user(username: str, email:str):
     users = load_json(USERS_FILE)
 
     for user in users:
-        if user["email"] == user:
+        if user["email"] == email:
             raise HTTPException(status_code=400, detail="Email has already been registered.")
 
 

@@ -6,8 +6,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.context.annotation.Bean;
 
+
 @SpringBootApplication
 public class ChatappApplication {
+    
 
     public static void main(String[] args) {
         SpringApplication.run(ChatappApplication.class, args);

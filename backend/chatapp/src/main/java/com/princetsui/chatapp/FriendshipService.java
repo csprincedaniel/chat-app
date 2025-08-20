@@ -29,7 +29,7 @@ public class FriendshipService {
 
         friendshipRepo.save(friendship);
 
-        return null;
+        return friendship;
         // Business logic here
     }
     

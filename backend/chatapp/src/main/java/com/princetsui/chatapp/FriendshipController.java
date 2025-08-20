@@ -20,9 +20,9 @@ public class FriendshipController {
     private FriendshipService friendshipService;
         // Send friend request
     @PostMapping("/request")
-    public ResponseEntity<Map<String, String>> sendFriendRequest(@RequestParam String requester, @RequestParam String recipient){
+    public ResponseEntity<Map<String, Friendship>> sendFriendRequest(@RequestParam String requester, @RequestParam String recipient){
         Friendship friendship = friendshipService.sendFriendRequest(requester, recipient);
-        return ResponseEntity.ok(Map.of("user1", requester, "user2", recipient));
+        return ResponseEntity.ok(Map.of("code", friendship));
     }
     
     // Accept friend request  

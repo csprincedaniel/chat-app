@@ -279,3 +279,5 @@ class SummaryBot:
             "generated_at": datetime.now().isoformat(),
             "model_used": self.model_name
         }
+
+    

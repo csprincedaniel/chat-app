@@ -7,10 +7,17 @@ import os
 import uuid
 
 from datetime import datetime
+
+from ML.summary.main import SummaryBot
 import asyncio
 
 
 app = FastAPI(title="Chat App API", version="1.0.0")
+
+
+print(f"Initializing Summary Bot")
+summary_bot = SummaryBot()
+print(f"Summary bot is ready")
 
 
 # Add CORS middleware for frontend connection
@@ -55,6 +62,19 @@ class Message(BaseModel):
     user_id: str
     channel_id:str
     timestamp:str
+
+class SummaryRequest(BaseModel):
+    channel_id: str
+    time_window_hours: Optional[int] = None
+    max_length: int = 150
+    min_length: int = 30
+
+class SummaryResponse(BaseModel):
+    summary: str
+    message_count: int
+    time_range: Optional[Dict]
+    generated_at: str
+    model_used: str
 
 # File path for JSON files
 

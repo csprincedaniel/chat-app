@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Optional
@@ -340,5 +340,114 @@ async def websocket_endpoint(channel_id:str, websocket:WebSocket):
 @app.get("/health")
 async def check_health():
     return {"Status": "healthy", "timestamp": get_timestamp()}
+
+
+@app.post("/channels/{channel_id}/summary", response_model=SummaryResponse)
+async def generate_channel_summary(
+    channel_id: str, 
+    summary_request: SummaryRequest,
+    background_task: BackgroundTasks
+):
+    
+    try:
+        channels = load_json(CHANNELS_FILE)
+        channel_exists = any(channel["id"] == channel_id for channel in channels)
+
+        if not channel_exists:
+            raise HTTPException(status_code=404, detail="Channel not found")
+
+
+        # Getting messages from channel
+        messages = load_json(MESSAGE_FILE)
+
+        channel_messages = [msg for msg in messages if msg["channel_id"] == channel_id]
+
+        # If no messages are found in channel.
+        if not channel_messages:
+            return SummaryResponse(
+                summary= "No messages in channel",
+                message_count=0,
+                time_range=None, 
+                generated_at=get_timestamp(),
+                model_used=summary_bot.model_name
+            )
+        
+        result = summary_bot.summarize_channel_messages(
+            messages=channel_messages,
+            time_window_hours=summary_request.time_window_hours
+
+        )
+        
+
+        # **result is unpacking the result dictionary and using it to fill a 
+        # SummaryReponse object.
+        return SummaryResponse(**result)
+    
+    except Exception as e:
+        print("Error generating summary {e}")
+        raise HTTPException(status_code=404, detail="Failed to generate summary")
+    
+    
+
+
+@app.get("/channels/{channe_id}/summary/quick")
+# hours is number of hours to look back for messages to include in summary.
+async def quick_channel_summary(channel_id:str, hours: int=24):
+
+    try: 
+        summary_request = SummaryRequest(
+            channel_id=channel_id,
+            time_window_hours=hours,
+            max_length=100, # shorter for quick summary
+            min_length=20
+        )
+
+        return await generate_channel_summary(channel_id=channel_id, summary_request=summary_request, background_task=BackgroundTasks())
+
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        print(f"Error generating quick channel summary {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate quick summary: {str(e)}")
+    
+
+
+@app.get("/summary/model")
+# Get information about summarization model.
+async def get_summary_model():
+
+    return {
+        "current_model": summary_bot.model_name,
+        "available_models": [
+            {
+                "name": "facebook/bart-large-cnn",
+                "description": "Large BART model, high quality summaries",
+                "size": "Large (~1.6GB)"
+            },
+            {
+                "name": "sshleifer/distilbart-cnn-12-6", 
+                "description": "Smaller BART model, faster processing",
+                "size": "Medium (~306MB)"
+            },
+            {
+                "name": "google/pegasus-xsum",
+                "description": "PEGASUS model trained on XSum dataset", 
+                "size": "Large (~2.3GB)"
+            },
+            {
+                "name": "t5-small",
+                "description": "Small T5 model, very fast",
+                "size": "Small (~242MB)"
+            }
+        ]
+    }
+
+
+
+
+
+    
 
 

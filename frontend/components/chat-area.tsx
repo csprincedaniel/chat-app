@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
+import {Client} from "@stomp/stompjs"
 import styles from "./chat-area.module.css"
 
 interface Message {
@@ -57,15 +58,37 @@ export default function ChatArea({ channelName, serverName, currentUser }: ChatA
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault()
-    if (newMessage.trim()) {
-      const message: Message = {
+    alert(`Received from the server:  + ${newMessage}`)
+    const stompClient = new Client({
+      brokerURL:'ws://localhost:8080/ws',
+      debug: function (str) {
+        console.log('STOMP: ' + str);
+      },
+    })
+
+    stompClient.onConnect = () =>{
+
+      stompClient.publish({
+        destination: '/app/chat', 
+        body: newMessage
+      })
+          // Subscribe to receive messages from server
+    stompClient.subscribe('/topic/messages', (message) => {
+      const newMsg: Message = {
         id: Date.now().toString(),
         user: currentUser.username,
-        content: newMessage,
+        content: message.body, // Just use the string directly
         timestamp: new Date(),
         avatar: "👤",
-      }
-      setMessages([...messages, message])
+      };
+      setMessages(prev => [...prev, newMsg]);
+    });
+    }
+
+
+    stompClient.activate()
+
+    if (newMessage.trim()) {
       setNewMessage("")
     }
   }
@@ -88,6 +111,42 @@ export default function ChatArea({ channelName, serverName, currentUser }: ChatA
     }
   }
 
+async function handleFriendClick(): Promise<void> {
+  try {
+    const res = await fetch("http://localhost:8080/info/me", {
+      credentials: "include", // sends the session cookie automatically
+    });
+    if (!res.ok) throw new Error("Not logged in");
+
+    const data = await res.json(); // e.g., { username: "me" }
+
+    const user = prompt("What is the username of the friend you want to add?");
+    if (!user) return;
+
+    alert(`Sending a friend request to ${user}.`);
+
+    const requestRes = await fetch("http://localhost:8080/api/friendships/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        requester: data.username, // send only what backend expects
+        recipient: user
+      }),
+      credentials: "include"
+    });
+
+    if (!requestRes.ok) throw new Error("Request failed");
+
+    alert(`Friend request sent to ${user}.`);
+  } catch (err) {
+    console.error(err);
+    alert("ERR");
+  }
+}
+
+
+  
+
   return (
     <div className={styles.chatArea}>
       <div className={styles.chatHeader}>
@@ -99,7 +158,7 @@ export default function ChatArea({ channelName, serverName, currentUser }: ChatA
           <button className={styles.headerButton}>📞</button>
           <button className={styles.headerButton}>📹</button>
           <button className={styles.headerButton}>📌</button>
-          <button className={styles.headerButton}>👥</button>
+          <button onClick={() => handleFriendClick()} className={styles.headerButton}>👥</button>
           <button className={styles.headerButton}>🔍</button>
           <button className={styles.headerButton}>📥</button>
           <button className={styles.headerButton}>❓</button>

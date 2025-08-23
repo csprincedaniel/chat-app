@@ -1,5 +1,7 @@
 {
   "dependencies": {
-    "jwt-decode": "^4.0.0"
+    "@stomp/stompjs": "^7.1.1",
+    "jwt-decode": "^4.0.0",
+    "sockjs-client": "^1.6.1"
   }
 }

@@ -4,15 +4,21 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@CrossOrigin(
+    origins = "http://localhost:3000",
+    allowCredentials = "true"
+)
 @RestController
 @RequestMapping("/api/friendships")
 public class FriendshipController {
@@ -20,7 +26,9 @@ public class FriendshipController {
     private FriendshipService friendshipService;
         // Send friend request
     @PostMapping("/request")
-    public ResponseEntity<Map<String, Friendship>> sendFriendRequest(@RequestParam String requester, @RequestParam String recipient){
+    public ResponseEntity<Map<String, Friendship>> sendFriendRequest(@RequestBody Map<String, String> body){
+        String requester = body.get("requester");
+        String recipient = body.get("recipient");
         Friendship friendship = friendshipService.sendFriendRequest(requester, recipient);
         return ResponseEntity.ok(Map.of("code", friendship));
     }

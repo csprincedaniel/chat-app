@@ -46,6 +46,7 @@ export default function ChatArea({ channelName, serverName, currentUser }: ChatA
   ])
 
   const [newMessage, setNewMessage] = useState("")
+  const [stompClient, setStompClient] = useState<Client | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -56,39 +57,53 @@ export default function ChatArea({ channelName, serverName, currentUser }: ChatA
     scrollToBottom()
   }, [messages])
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault()
-    alert(`Received from the server:  + ${newMessage}`)
-    const stompClient = new Client({
-      brokerURL:'ws://localhost:8080/ws',
+  useEffect(() => {
+    const client = new Client({
+      brokerURL: 'ws://localhost:8080/ws',
       debug: function (str) {
         console.log('STOMP: ' + str);
       },
     })
 
-    stompClient.onConnect = () =>{
+    client.onConnect = () => {
+      // Subscribe to receive messages from server
+      client.subscribe('/topic/messages', (message) => {
+        const chatMessage = JSON.parse(message.body);
+        const newMsg: Message = {
+          id: Date.now().toString(),
+          user: chatMessage.user,
+          content: chatMessage.content,
+          timestamp: new Date(chatMessage.timestamp),
+          avatar: "👤",
+        };
+        setMessages(prev => [...prev, newMsg]);
+      });
+    }
+
+    client.activate()
+    setStompClient(client)
+
+    return () => {
+      if (client.active) {
+        client.deactivate()
+      }
+    }
+  }, [])
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (newMessage.trim() && stompClient) {
+      const messageToSend = {
+        user: currentUser.username,
+        content: newMessage.trim()
+      }
 
       stompClient.publish({
         destination: '/app/chat', 
-        body: newMessage
+        body: JSON.stringify(messageToSend)
       })
-          // Subscribe to receive messages from server
-    stompClient.subscribe('/topic/messages', (message) => {
-      const newMsg: Message = {
-        id: Date.now().toString(),
-        user: currentUser.username,
-        content: message.body, // Just use the string directly
-        timestamp: new Date(),
-        avatar: "👤",
-      };
-      setMessages(prev => [...prev, newMsg]);
-    });
-    }
 
-
-    stompClient.activate()
-
-    if (newMessage.trim()) {
       setNewMessage("")
     }
   }
@@ -143,9 +158,6 @@ async function handleFriendClick(): Promise<void> {
     alert("ERR");
   }
 }
-
-
-  
 
   return (
     <div className={styles.chatArea}>

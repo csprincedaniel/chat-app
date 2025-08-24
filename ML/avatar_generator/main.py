@@ -84,3 +84,43 @@ class ProfilePictureGenerator:
         full_prompt = f"{base_prompt}, {profile_modifiers}"
 
         return full_prompt
+    
+
+    """
+        Saves processed profile image to storage
+        
+        Args:
+            image_data: Processed image bytes
+            user_id: User ID for filename
+            
+        Returns:
+            File path or None if failed
+    """
+    async def save_profile_image(self, image_data: bytes, user_id: str) -> Optional[str]:
+
+        try: 
+
+            # Creating file path if doesn't already exist
+            profile_dir = "backend/data/profile_images"
+            os.makedirs(profile_dir, exist_ok=True)
+
+
+            # Generate unique file name
+            # %Y%m%d_%H%M%S is the format of the timestamp
+            # % Y % m % d _ % H % M % S
+
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"profile_{user_id}_{timestamp}.png"
+            filepath = os.path.join(profile_dir, filename)
+
+            # Saving image
+            # wb - write binary
+
+            async with aiofiles.open(filepath, 'wb') as f:
+                await f.write(image_data)
+
+            return f"Saved your image at {filepath}"
+        
+        except Exception as e:
+            print(f"Error saving image {e}")
+            return None

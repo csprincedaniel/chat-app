@@ -6,9 +6,10 @@ import styles from "./auth-page.module.css"
 
 interface AuthPageProps {
   onLogin: (userData: { username: string; password: string }) => void
+  onSignup: (userData: { username: string; password: string; email?: string }) => void
 }
 
-export default function AuthPage({ onLogin }: AuthPageProps) {
+export default function AuthPage({ onLogin, onSignup }: AuthPageProps) {
   const [isLogin, setIsLogin] = useState(true)
   const [formData, setFormData] = useState({
     username: "",
@@ -54,14 +55,25 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
     setIsLoading(true)
     setErrors([])
 
-    setTimeout(() => {
-      const userData = {
-        username: formData.email, // email as login identifier
-        password: formData.password
+    try {
+      if (isLogin) {
+        await onLogin({
+          username: formData.email,
+          password: formData.password
+        })
+      } else {
+        await onSignup({
+          username: formData.username,
+          password: formData.password,
+          email: formData.email
+        })
       }
-      onLogin(userData)
+    } catch (error) {
+      console.error("Auth error:", error)
+      setErrors(["Something went wrong. Please try again."])
+    } finally {
       setIsLoading(false)
-    }, 500)
+    }
   }
 
   const toggleMode = () => {

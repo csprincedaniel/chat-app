@@ -31,7 +31,27 @@ useEffect(() => {
   checkSession();
 }, []);
 
+  const handleSignup = async (userData: { username: string; password: string; email?: string }) => {
+    try {
+      const res = await fetch("http://localhost:8080/info/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // important for cookies
+        body: JSON.stringify(userData)
+      });
 
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Signup failed");
+
+      setUser({ username: data.username });
+      setIsAuthenticated(true);
+      alert("Signup successful! Welcome " + data.username);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message);
+    }
+  };
+  
 const handleLogin = async (userData: { username: string; password: string }) => {
   try {
     const res = await fetch("http://localhost:8080/info/login", {
@@ -62,5 +82,5 @@ const handleLogin = async (userData: { username: string; password: string }) => 
   }
 
   if (isAuthenticated && user) return <DiscordApp user={user} onLogout={handleLogout} />
-  return <AuthPage onLogin={handleLogin} />
+ return <AuthPage onLogin={handleLogin} onSignup={handleSignup} />
 }

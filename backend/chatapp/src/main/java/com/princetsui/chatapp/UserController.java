@@ -78,6 +78,57 @@ public class UserController {
             return ResponseEntity.ok(Map.of("username", username));
         }).orElse(ResponseEntity.status(404).body(Map.of("error", "User not found")));
     }
+    // Add this method to your UserController class
+
+@PostMapping("/signup")
+public ResponseEntity<Map<String, String>> signup(@RequestBody Map<String, String> body, HttpSession session) {
+    String username = body.get("username");
+    String password = body.get("password");
+    String email = body.get("email");
+    
+    System.out.println("Signup attempt - Username: " + username + ", Password: " + password + ", Email: " + email);
+    
+    // Validate input
+    if (username == null || username.trim().isEmpty()) {
+        System.out.println("Validation failed: Username is required");
+        return ResponseEntity.status(400).body(Map.of("error", "Username is required"));
+    }
+    
+    if (password == null || password.trim().isEmpty()) {
+        System.out.println("Validation failed: Password is required");
+        return ResponseEntity.status(400).body(Map.of("error", "Password is required"));
+    }
+    
+    // Check if username already exists
+    if (personRepo.findByUsername(username).isPresent()) {
+        System.out.println("Validation failed: Username already exists");
+        return ResponseEntity.status(409).body(Map.of("error", "Username already exists"));
+    }
+    
+    try {
+        // Create new user
+        Person newUser = new Person();
+        newUser.setUsername(username.trim());
+        newUser.setPassword(password);
+        
+        System.out.println("About to save user...");
+        Person savedUser = personRepo.save(newUser);
+        System.out.println("User saved successfully: " + savedUser.getUsername());
+        
+        // Auto-login after signup
+        session.setAttribute("username", username);
+        
+        return ResponseEntity.ok(Map.of(
+            "message", "User created successfully",
+            "username", savedUser.getUsername()
+        ));
+        
+    } catch (Exception e) {
+        System.err.println("Error creating user: " + e.getMessage());
+        e.printStackTrace();
+        return ResponseEntity.status(500).body(Map.of("error", "Failed to create user"));
+    }
+}
 
     //didn't write
 @GetMapping("/me")

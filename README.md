@@ -4,7 +4,7 @@ A full-stack **Discord-inspired communication platform** built with **FastAPI** 
 
 This project demonstrates both **real-time communication systems** and **production-ready AI integrations**, making it an ideal showcase for software engineering and machine learning applications.  
 
-## 👥 Authors  
+## Authors  
 
 - Daniel Prince
 - Jack Tsui
@@ -14,7 +14,7 @@ This project demonstrates both **real-time communication systems** and **product
 
 ## Features  
 
-### 🛠 Core App  
+### Core App  
 - 🔹 User authentication (register/login)  
 - 🔹 Servers & channels (create/join/manage)  
 - 🔹 Real-time messaging via WebSockets  

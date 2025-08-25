@@ -37,12 +37,10 @@ This project demonstrates both **real-time communication systems** and **product
 
 - **Frontend:** React.js + Tailwind CSS  
 - **Backend:** FastAPI (Python)  
-- **Database:** PostgreSQL or MongoDB  
+- **Database:** Custom JSON-based storage system 
 - **Real-Time Messaging:** WebSockets (Socket.IO)  
 - **Voice Chat:** WebRTC  
 - **ML/AI Models:** PyTorch, Hugging Face Transformers, Diffusion Models  
-- **Storage:** AWS S3 or Firebase Storage (avatars, audio files)  
-- **Deployment:** Vercel (frontend), Render/Fly.io (backend), Railway (database), Docker (ML services)  
 
 
 

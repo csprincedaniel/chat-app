@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, BackgroundTasks, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 import json 
@@ -7,7 +8,9 @@ import os
 import uuid
 
 from datetime import datetime
+import aiofiles
 import asyncio
+from ML.avatar_generator.main import ProfilePictureGenerator
 
 
 app = FastAPI(title="Chat App API", version="1.0.0")
@@ -24,7 +27,31 @@ app.add_middleware(
 
 )
 
+
+# Using static to create URLS for certain assets like profile pictures 
+# the URLs will look like /static/{filename}
+# The reason for static is that its faster than just doing /{filename}
+# and it sorts which assets are static and not.
+# name="static" used to identify URL as static or not Optional but useful
+app.mount("/static", StaticFiles(directory="backend/data"), name="static")
+
 # Data models 
+
+class ProfilePictureRequest(BaseModel):
+    user_id: str
+    description: str
+    style: Optional[str] = "cartoon" # cartton, anime, cyberpunk, realistic, fantasy, mimalist
+    negative_prompt: Optional[str] = None
+
+class ProfilePictureResponse(BaseModel):
+    success: bool
+    message: str
+    filepath: Optional[str] = None
+    style_used: Optional[str] = None
+    prompt_used: Optional[str] = None
+    generated_at: Optional[str] = None
+    file_size: Optional[int] = None
+    error: Optional[str] = None
 
 class User(BaseModel):
     id: str
@@ -65,6 +92,8 @@ CHANNELS_FILE = f"{DATA_DIR}/channels.json"
 SERVERS_FILE = f"{DATA_DIR}/servers.json"
 MESSAGE_FILE = f"{DATA_DIR}/messages.json"
 
+profile_generator = ProfilePictureGenerator()
+print("Successfully made ProfilePictureGenerator object")
 
 
 
@@ -315,6 +344,294 @@ async def websocket_endpoint(channel_id:str, websocket:WebSocket):
     
     except WebSocketDisconnect:
         manager.disconnect(websocket=websocket, channel_id=channel_id)
+
+"""
+    Generate an AI profile picture for a user
+    
+    This endpoint:
+    1. Validates the user exists
+    2. Generates an AI image based on user description
+    3. Processes it into profile picture format
+    4. Saves it to storage
+    5. Updates user's avatar URL in database
+"""
+@app.post("/users/{user_id}/profile_picture/generate", response_model=ProfilePictureResponse)
+async def generate_ai_profile_picture(
+    user_id: str,
+    request: ProfilePictureRequest,
+    background_task: BackgroundTasks
+):
+    try:
+
+        # Verifying if user exists
+        users = load_json(USERS_FILE)
+        user = None
+
+        for u in users:
+            if u["id"] == user_id:
+                user = u
+                break
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Checking if the style the user picked for their AI generated profile picture is 
+        
+        valid_styles = ["cartoon", "realistic", "anime", "cyberpunk", "fantasy", "minimalist"]
+        if request.style not in valid_styles:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Please select a valid style which are {valid_styles}"
+            )
+        
+        # If both a user exist and the style for prompt is legitimate, then generate the AI profile picture 
+        # accordingly to the prompt.
+        
+        # profile_generator.generate_profile_picture returns a dictionary
+        # Ex) 
+        # {
+        #     "success": False,
+        #     "error": str(e),
+        #     "filepath": None
+        # }
+        result = await profile_generator.generate_profile_picture(
+            user_description=request.description,
+            user_id=user_id,
+            style=request.style
+
+        )
+
+
+        # Return an error response if failed to generate AI profile picture.
+        if not result["success"]:
+            return ProfilePictureResponse(
+                success=False,
+                message="Failed to generate AI profile picture.",
+                error=result.get("error", "Unknown error")
+
+            )
+
+        
+        # Updating User's avatar URL in database
+        avatar_url = f"/static/profile_pictures/{result["filepath"]}"
+
+
+        # Changing the user's avatar to the newly generated one.
+        for i, u in enumerate(users):
+            if u["id"] == user_id:
+                user[i]["avatar_url"] = avatar_url
+                break
+
+        save_data(USERS_FILE, users)
+
+        return ProfilePictureResponse(
+            success=True,
+            message="Profile picture generated successfully",
+            filepath=result["filepath"],
+            style_used=result["style"],
+            prompt_used=result["prompt_used"],
+            generated_at=result["generated_at"],
+            file_size=result["file_size"]
+        )
+
+    # Show the detailed error message if possible else go the the default error message.
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        print(f"Failed to Generate AI Profile Picture")
+
+# Gets user's profile picture
+@app.get("/users/{user_id}/profile-picture")
+async def get_user_profile_picture(user_id:str):
+    
+    try: 
+        users = load_json(USERS_FILE)
+        user = None
+
+        for u in users:
+            if u["id"] == user_id:
+                user = u
+                break
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        return {
+            "user_id": user_id,
+            "avatar_url": user.get("avatar_url"),
+            "has_profile_picture": bool(user.get("avatar_url"))
+        }
+    
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+# Get list of available art styles for profile picture generation
+@app.get("/profile-picture/styles")
+async def get_available_styles():
+
+    return {
+
+    "available_styles": [
+            {
+                "name": "cartoon",
+                "description": "Colorful cartoon/Disney-like style",
+                "example_prompt": "friendly cartoon character with big eyes"
+            },
+            {
+                "name": "realistic",
+                "description": "Photorealistic human portraits",
+                "example_prompt": "professional headshot of a person"
+            },
+            {
+                "name": "anime",
+                "description": "Japanese anime/manga art style",
+                "example_prompt": "anime character with spiky hair"
+            },
+            {
+                "name": "cyberpunk",
+                "description": "Futuristic cyberpunk aesthetic with neon colors",
+                "example_prompt": "cyberpunk hacker with glowing eyes"
+            },
+            {
+                "name": "fantasy",
+                "description": "Fantasy art with magical elements",
+                "example_prompt": "elven wizard with mystical aura"
+            },
+            {
+                "name": "minimalist",
+                "description": "Clean, simple artistic style",
+                "example_prompt": "simple geometric portrait"
+            }
+        ]
+    }
+
+
+# Allows user to upload their own profile picture not an AI generated one by the app.
+@app.post("/user/{user_id}/profile-pictures/upload")
+async def upload_profile_picture(user_id: str, file: UploadFile = File(...)):
+
+    try:
+
+        users = load_json(USERS_FILE)
+        user = None
+    
+        # Checking if the user exists
+        for u in users:
+            if u["is"] == user_id:
+                user = u
+                break
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Validating file type of the uploaded image
+        # The .content_type has the MIME type from the browser which says what 
+        # the file type is.
+        # Example of MIME is text/html, audio/mp3, video/mp4
+        # Before the slash is the general file type so 
+        # like text/, image/, audio/ 
+        # and to the right of the slash is the subtype which is a specfic file extension.
+        if not file.content_type.startswith('image/'):
+            raise HTTPException(status_code=400, detail="File must be an image")
+        
+
+        # Make sure the directory for the profile pictures exist before saving them.
+        upload_dir = "backend/data/profile_pictures"
+        os.makedirs(upload_dir,exist_ok=True)
+
+        # Generating unique file names
+        # "%Y%m%d_%H%M%S" is the format of the timestamp
+        # "% Y % m % d_ % H % M % S"
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # [-1] in .split('.')[-1] means file_exention will store the right 
+        # most string so if you had an image called
+        # 'balloon.png' then split('.') would turn it into ['balloon', 'png']
+        # where the file extension will be the last element in the list which is why 
+        # [-1] is used.
+        file_extension = file.filename.split('.')[-1] if '.' else 'png'
+        filename = f"uploaded_{user_id}_{timestamp}.{file_extension}"
+
+        # Generating the file path for the uploaded image to be saved.
+        filepath = os.path.join(upload_dir, filename)
+        
+        # Asyncerously save the uploaded profile picture.
+        async with aiofiles.open(filepath, 'wb') as f:
+            content = await file.read()
+            await f.write(content)
+
+
+        # Updating the URL for the user's avatar
+        avatar_url = f"static/profile_images/{filename}"
+
+        for i, u in enumerate(users):
+            if u["id"] == user_id:
+                user[i]["avatar_url"] = avatar_url
+                break
+
+        save_data(USERS_FILE, user)
+
+        return {
+            "success": True,
+            "message": "Profile picture uploaded successfully",
+            "avatar_url": avatar_url
+        }
+
+
+
+    except HTTPException:
+        raise
+
+    except Exception as e: 
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+# Remove users profile pictures.
+@app.post("/users/{user_id}/profile-picture")
+async def delete_profile_picture(user_id: str):
+
+    try:
+        users = load_json(USERS_FILE)
+        user = None
+        user_index = None
+
+        for i, u in enumerate(users):
+            if u["id"] == user_id:
+                user = u
+                user_index = i
+                break
+
+        if not user: 
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Remove avatar URL from record
+        if "avatar_url" in users[user_index]:
+            users[user_index]["avatar_url"] = None
+
+        save_data(USERS_FILE, users)
+
+        return {
+            "success": True,
+            "message": "Profile Picture was removed successfully"
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+
+
+
 
 
 @app.get("/health")
